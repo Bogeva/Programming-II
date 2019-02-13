@@ -1,36 +1,55 @@
-// Imported SVG Groups have their applyMatrix flag turned off by
-// default. This is required for SVG importing to work correctly. Turn
-// it on now, so we don't have to deal with nested coordinate spaces.
-var words = project.importSVG(document.getElementById('svg'));
-words.visible = true; // Turn off the effect of display:none;
-words.fillColor = null;
-words.strokeColor = 'black';
-var yesGroup = words.children.yes;
+var width, height, center;
+var points = 10;
+var smooth = true;
+var path = new Path();
+var mousePos = view.center / 2;
+var pathHeight = mousePos.y;
+path.fillColor = 'black';
+initializePath();
 
-var noGroup = words.children.no;
-// Resize the words to fit snugly inside the view:
-words.fitBounds(view.bounds);
-words.scale(0.8);
-
-yesGroup.position = view.center;
-noGroup.position = [-900, -900];
-
-function onMouseMove(event) {
-    noGroup.position = event.point;
-    for (var i = 0; i < yesGroup.children.length; i++) {
-        for (var j = 0; j < noGroup.children.length; j++) {
-            showIntersections(noGroup.children[j], yesGroup.children[i])
-        }
-    }
+function initializePath() {
+	center = view.center;
+	width = view.size.width;
+	height = view.size.height / 2;
+	path.segments = [];
+	path.add(view.bounds.bottomLeft);
+	for (var i = 1; i < points; i++) {
+		var point = new Point(width / points * i, center.y);
+		path.add(point);
+	}
+	path.add(view.bounds.bottomRight);
+	path.fullySelected = true;
 }
 
-function showIntersections(path1, path2) {
-    var intersections = path1.getIntersections(path2);
-    for (var i = 0; i < intersections.length; i++) {
-        new Path.Circle({
-            center: intersections[i].point,
-            radius: 5,
-            fillColor: '#009dec'
-        }).removeOnMove();
-    }
+function onFrame(event) {
+	pathHeight += (center.y - mousePos.y - pathHeight) / 10;
+	for (var i = 1; i < points; i++) {
+		var sinSeed = event.count + (i + i % 10) * 100;
+		var sinHeight = Math.sin(sinSeed / 200) * pathHeight;
+		var yPos = Math.sin(sinSeed / 100) * sinHeight + height;
+		path.segments[i].point.y = yPos;
+	}
+	if (smooth)
+		path.smooth({ type: 'continuous' });
+}
+
+function onMouseMove(event) {
+	mousePos = event.point;
+}						
+
+function onMouseDown(event) {
+	smooth = !smooth;
+	if (!smooth) {
+		// If smooth has been turned off, we need to reset
+		// the handles of the path:
+		for (var i = 0, l = path.segments.length; i < l; i++) {
+			var segment = path.segments[i];
+			segment.handleIn = segment.handleOut = null;
+		}
+	}
+}
+
+// Reposition the path whenever the window is resized:
+function onResize(event) {
+	initializePath();
 }

@@ -1,8 +1,12 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.js"></script>
-        <script src="main.js"></script>
-    </head>
-    <body>
-    </body>
-</html>
+<head>
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="/paper.js/src/load.js"></script>
+<!-- Load external PaperScript and associate it with myCanvas -->
+<script type="text/paperscript" src="main.js" canvas="myCanvas">
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" resize></canvas>
+</body>
